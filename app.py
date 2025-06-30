@@ -77,25 +77,37 @@ def generate_quiz():
         
         if model and GEMINI_API_KEY:
             try:
-                # Generate quiz using Gemini API
+                # Generate quiz using Gemini API with enhanced prompts
                 prompt = f"""
-                Create a fun, educational quiz about "{topic}" for a {age}-year-old child.
-                
-                Requirements:
+                You are Quizzy, a friendly and enthusiastic AI teacher who loves helping children learn!
+                Create an amazing, fun quiz about "{topic}" for a {age}-year-old child.
+
+                IMPORTANT REQUIREMENTS:
                 - Generate exactly 4 multiple choice questions
                 - Each question should have 4 options (A, B, C, D)
-                - Make the language age-appropriate for a {age}-year-old
-                - Include encouraging, positive language
-                - Make it educational but fun
-                
+                - Use simple, clear language perfect for a {age}-year-old
+                - Make questions engaging with "Did you know..." or "Can you guess..." style
+                - Include fun facts and surprising information
+                - Use emojis and exciting language where appropriate
+                - Make explanations encouraging and educational
+                - Avoid scary, negative, or complex topics
+                - Focus on wonder, discovery, and positive learning
+
+                CONTENT GUIDELINES:
+                - Questions should spark curiosity and imagination
+                - Include relatable examples from a child's world
+                - Make learning feel like an adventure
+                - Use positive, encouraging tone throughout
+                - Explanations should teach something new and exciting
+
                 Return the response in this exact JSON format:
                 {{
                     "questions": [
                         {{
-                            "question": "Question text here?",
-                            "options": ["Option A", "Option B", "Option C", "Option D"],
+                            "question": "Exciting question that makes kids curious?",
+                            "options": ["Fun option A", "Amazing option B", "Cool option C", "Awesome option D"],
                             "correct_answer": 0,
-                            "explanation": "Brief explanation for kids"
+                            "explanation": "Wow! That's right! Here's why this is so amazing and what makes it special for kids to understand..."
                         }}
                     ]
                 }}
@@ -145,33 +157,33 @@ def generate_quiz():
         else:
             quiz_data = None
             
-        # Use mock response if API is not available or failed
+        # Use enhanced mock response if API is not available or failed
         if quiz_data is None:
             quiz_data = {
                 "questions": [
                     {
-                        "question": f"What is a fun fact about {topic}?",
-                        "options": ["It's amazing!", "It's interesting!", "It's cool!", "All of the above!"],
+                        "question": f"🌟 Did you know that {topic} can be super exciting? What makes {topic} so amazing?",
+                        "options": ["It's full of surprises! ✨", "It helps us learn cool things! 🧠", "It's fun to explore! 🔍", "All of these awesome things! 🎉"],
                         "correct_answer": 3,
-                        "explanation": f"Great job! {topic} is indeed amazing, interesting, and cool!"
+                        "explanation": f"Wow! You're absolutely right! {topic} is full of surprises, helps us learn amazing things, and is so much fun to explore! You're such a smart learner! 🌟"
                     },
                     {
-                        "question": f"How would you describe {topic} to a friend?",
-                        "options": ["Boring", "Exciting", "Confusing", "Scary"],
+                        "question": f"🤔 If you could tell your best friend about {topic}, what would you say?",
+                        "options": ["It's boring 😴", "It's the most exciting thing ever! 🚀", "It's too hard to understand 😕", "I don't care about it 🤷"],
                         "correct_answer": 1,
-                        "explanation": f"That's right! {topic} is exciting and fun to learn about!"
+                        "explanation": f"Yes! {topic} really IS the most exciting thing ever! There's so much to discover and learn. Your enthusiasm for learning is fantastic! 🎊"
                     },
                     {
-                        "question": f"What's the best way to learn about {topic}?",
-                        "options": ["Reading books", "Watching videos", "Asking questions", "All of these!"],
+                        "question": f"🎯 What's the most fun way to learn about {topic}?",
+                        "options": ["Reading colorful books 📚", "Watching awesome videos 📺", "Asking lots of questions ❓", "Doing all of these amazing things! 🌈"],
                         "correct_answer": 3,
-                        "explanation": "Excellent! Learning happens in many different ways!"
+                        "explanation": "Outstanding choice! The best learners use ALL these ways - books, videos, and asking questions! You're becoming a learning superhero! 🦸‍♀️🦸‍♂️"
                     },
                     {
-                        "question": f"Why is {topic} important?",
-                        "options": ["It helps us understand the world", "It's fun to know", "It makes us smarter", "All of the above"],
+                        "question": f"💫 Why do you think learning about {topic} is important for kids like you?",
+                        "options": ["It helps us understand our amazing world 🌍", "It's super fun and exciting 🎈", "It makes us smarter and more curious 🧠", "All of these incredible reasons! ⭐"],
                         "correct_answer": 3,
-                        "explanation": f"Perfect! {topic} helps us in many wonderful ways!"
+                        "explanation": f"Perfect! Learning about {topic} does ALL these wonderful things! It helps you understand the world, brings joy and excitement, and makes you smarter and more curious every day! Keep being awesome! 🏆"
                     }
                 ]
             }

@@ -6,10 +6,11 @@ import VoiceManager from './VoiceManager';
 interface QuizInterfaceProps {
   session: QuizSession;
   onQuizComplete: (finalScore: number, totalQuestions: number) => void;
+  onScoreUpdate: (currentScore: number, currentQuestion: number) => void;
   voiceManager: VoiceManager;
 }
 
-const QuizInterface: React.FC<QuizInterfaceProps> = ({ session: initialSession, onQuizComplete, voiceManager }) => {
+const QuizInterface: React.FC<QuizInterfaceProps> = ({ session: initialSession, onQuizComplete, onScoreUpdate, voiceManager }) => {
   const [session, setSession] = useState<QuizSession>(initialSession);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
@@ -125,17 +126,24 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ session: initialSession, 
         setShowFeedback(true);
 
         // Update session state
+        const newScore = data.current_score;
+        const newQuestionIndex = session.current_question + 1;
+
         setSession(prev => ({
           ...prev,
-          score: data.current_score,
-          current_question: prev.current_question + 1,
+          score: newScore,
+          current_question: newQuestionIndex,
         }));
 
-        // Speak feedback
-        const feedbackText = data.is_correct 
-          ? `Correct! ${data.explanation}` 
-          : `Not quite right. ${data.explanation}`;
-        voiceManager.speak(feedbackText);
+        // Update parent component state to keep header score in sync
+        onScoreUpdate(newScore, newQuestionIndex);
+
+        // Speak feedback with enhanced emotion
+        if (data.is_correct) {
+          voiceManager.speakCorrectAnswer(data.explanation);
+        } else {
+          voiceManager.speakIncorrectAnswer(data.explanation);
+        }
 
         // Check if quiz is complete
         if (data.is_quiz_complete) {
@@ -180,55 +188,62 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ session: initialSession, 
     <div className="max-w-4xl mx-auto">
       {/* Progress Bar */}
       <div className="mb-8">
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-sm font-medium text-gray-600">
-            Question {session.current_question + 1} of {session.questions.length}
+        <div className="flex justify-between items-center mb-4">
+          <span className="text-xl font-bold text-gray-800 bg-blue-100 px-4 py-2 rounded-2xl border-2 border-blue-200">
+            📝 Question {session.current_question + 1} of {session.questions.length}
           </span>
-          <span className="text-sm font-medium text-gray-600">
-            Score: {session.score}
+          <span className="text-xl font-bold text-gray-800 bg-yellow-100 px-4 py-2 rounded-2xl border-2 border-yellow-200">
+            ⭐ Score: {session.score} points!
           </span>
         </div>
-        <div className="w-full bg-gray-200 rounded-full h-3">
-          <div 
-            className="bg-gradient-to-r from-purple-500 to-pink-500 h-3 rounded-full transition-all duration-500"
+        <div className="w-full bg-gray-200 rounded-full h-6 shadow-inner border-2 border-gray-300">
+          <div
+            className="bg-gradient-to-r from-green-400 via-blue-500 to-purple-500 h-6 rounded-full transition-all duration-500 shadow-lg relative overflow-hidden"
             style={{ width: `${((session.current_question + 1) / session.questions.length) * 100}%` }}
-          ></div>
+          >
+            <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+          </div>
+        </div>
+        <div className="text-center mt-2">
+          <span className="text-lg font-semibold text-gray-700">
+            🚀 {Math.round(((session.current_question + 1) / session.questions.length) * 100)}% Complete!
+          </span>
         </div>
       </div>
 
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8">
+      <div className="kid-card-rainbow p-10">
         {!showFeedback ? (
           <>
             {/* Question */}
             <div className="mb-8">
-              <div className="flex items-start justify-between mb-4">
-                <h2 className="text-2xl font-bold text-gray-800 flex-1">
-                  {currentQuestion.question}
+              <div className="flex items-start justify-between mb-6">
+                <h2 className="text-3xl font-bold text-gray-800 flex-1 leading-relaxed">
+                  🤔 {currentQuestion.question}
                 </h2>
                 <button
                   onClick={readQuestionAloud}
-                  className="ml-4 p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                  title="Read question aloud"
+                  className="ml-4 p-4 text-blue-600 hover:bg-blue-100 rounded-2xl transition-all transform hover:scale-105 shadow-lg border-2 border-blue-200"
+                  title="🔊 Hear the question again!"
                 >
-                  <Volume2 className="w-5 h-5" />
+                  <Volume2 className="w-6 h-6" />
                 </button>
               </div>
             </div>
 
             {/* Answer Options */}
-            <div className="space-y-4 mb-8">
+            <div className="space-y-5 mb-10">
               {currentQuestion.options.map((option, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedAnswer(index)}
-                  className={`w-full p-4 text-left rounded-xl border-2 transition-all duration-200 transform hover:scale-105 ${
+                  className={`w-full p-6 text-left rounded-2xl border-4 transition-all duration-200 transform hover:scale-105 shadow-lg text-xl font-semibold ${
                     selectedAnswer === index
-                      ? 'border-purple-400 bg-purple-50 text-purple-700'
-                      : 'border-gray-200 bg-white text-gray-700 hover:border-purple-200'
+                      ? 'border-purple-400 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 wiggle shadow-xl'
+                      : 'border-pink-200 bg-white text-gray-700 hover:border-purple-300 hover:bg-purple-50'
                   }`}
                 >
-                  <span className="font-medium text-purple-600 mr-3">
-                    {String.fromCharCode(65 + index)}.
+                  <span className="inline-flex items-center justify-center w-10 h-10 bg-purple-500 text-white rounded-full font-bold text-lg mr-4">
+                    {String.fromCharCode(65 + index)}
                   </span>
                   {option}
                 </button>
@@ -239,30 +254,30 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ session: initialSession, 
             <div className="flex items-center justify-between">
               <button
                 onClick={isListening ? stopListening : startListening}
-                className={`flex items-center space-x-2 px-6 py-3 rounded-xl border-2 transition-all transform hover:scale-105 ${
+                className={`flex items-center space-x-3 px-8 py-4 rounded-2xl border-4 transition-all transform hover:scale-105 shadow-lg text-lg font-semibold ${
                   isListening
-                    ? 'border-red-400 bg-red-50 text-red-600 animate-pulse'
-                    : 'border-blue-200 bg-white text-blue-600 hover:border-blue-400'
+                    ? 'border-red-400 bg-red-100 text-red-600 animate-pulse'
+                    : 'border-blue-300 bg-white text-blue-600 hover:border-blue-400 hover:bg-blue-50'
                 }`}
               >
-                {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-                <span>{isListening ? 'Stop Listening' : 'Speak Answer'}</span>
+                {isListening ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+                <span>{isListening ? '🛑 Stop Listening' : '🎤 Speak Your Answer'}</span>
               </button>
 
               <button
                 onClick={submitAnswer}
                 disabled={selectedAnswer === null || isSubmitting}
-                className="flex items-center space-x-2 px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100"
+                className="kid-button-primary text-xl py-4 px-10 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
                 {isSubmitting ? (
                   <>
-                    <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
-                    <span>Submitting...</span>
+                    <div className="animate-spin w-6 h-6 border-3 border-white border-t-transparent rounded-full mr-3"></div>
+                    <span>✨ Checking your answer... ✨</span>
                   </>
                 ) : (
                   <>
-                    <span>Submit Answer</span>
-                    <ArrowRight className="w-5 h-5" />
+                    <span>🚀 Submit My Answer!</span>
+                    <ArrowRight className="w-6 h-6 ml-3" />
                   </>
                 )}
               </button>
@@ -270,42 +285,60 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ session: initialSession, 
           </>
         ) : (
           /* Feedback */
-          <div className="text-center space-y-6">
-            <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto ${
-              currentFeedback?.isCorrect 
-                ? 'bg-green-100 text-green-600' 
-                : 'bg-red-100 text-red-600'
+          <div className="text-center space-y-8 bounce-in">
+            {/* Celebration stars for correct answers */}
+            {currentFeedback?.isCorrect && (
+              <div className="flex justify-center space-x-4 mb-4">
+                <div className="text-4xl star-sparkle">⭐</div>
+                <div className="text-5xl star-sparkle" style={{animationDelay: '0.2s'}}>🌟</div>
+                <div className="text-4xl star-sparkle" style={{animationDelay: '0.4s'}}>⭐</div>
+              </div>
+            )}
+
+            <div className={`w-28 h-28 rounded-full flex items-center justify-center mx-auto shadow-xl celebration-bounce ${
+              currentFeedback?.isCorrect
+                ? 'bg-gradient-to-r from-green-400 to-emerald-500 text-white'
+                : 'bg-gradient-to-r from-orange-400 to-red-400 text-white'
             }`}>
               {currentFeedback?.isCorrect ? (
-                <CheckCircle className="w-12 h-12" />
+                <CheckCircle className="w-16 h-16" />
               ) : (
-                <XCircle className="w-12 h-12" />
+                <XCircle className="w-16 h-16" />
               )}
             </div>
 
-            <h3 className={`text-3xl font-bold ${
-              currentFeedback?.isCorrect ? 'text-green-600' : 'text-red-600'
+            <h3 className={`text-5xl font-bold ${
+              currentFeedback?.isCorrect ? 'text-green-600' : 'text-orange-600'
             }`}>
-              {currentFeedback?.isCorrect ? 'Correct!' : 'Not quite right!'}
+              {currentFeedback?.isCorrect ? '🎉 Awesome! 🎉' : '💪 Good try! 💪'}
             </h3>
 
-            <p className="text-lg text-gray-700 max-w-2xl mx-auto">
-              {currentFeedback?.explanation}
-            </p>
+            <div className={`p-6 rounded-2xl border-4 max-w-2xl mx-auto ${
+              currentFeedback?.isCorrect
+                ? 'bg-green-50 border-green-200'
+                : 'bg-orange-50 border-orange-200'
+            }`}>
+              <p className="text-xl text-gray-800 font-medium">
+                {currentFeedback?.explanation}
+              </p>
+            </div>
 
-            <div className="pt-4">
+            <div className="pt-6">
               {session.current_question < session.questions.length ? (
                 <button
                   onClick={nextQuestion}
-                  className="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl hover:shadow-lg transition-all duration-200 transform hover:scale-105"
+                  className="kid-button-primary text-2xl py-5 px-12"
                 >
-                  Next Question
-                  <ArrowRight className="w-5 h-5 inline ml-2" />
+                  🚀 Next Adventure!
+                  <ArrowRight className="w-6 h-6 inline ml-3" />
                 </button>
               ) : (
-                <div className="text-gray-600">
-                  <p className="text-lg mb-4">Quiz Complete!</p>
-                  <div className="animate-spin w-8 h-8 border-4 border-purple-200 border-t-purple-600 rounded-full mx-auto"></div>
+                <div className="text-gray-700">
+                  <p className="text-2xl font-bold mb-6">🎊 Quiz Complete! 🎊</p>
+                  <div className="flex justify-center items-center space-x-3">
+                    <div className="animate-spin w-10 h-10 border-4 border-purple-200 border-t-purple-600 rounded-full"></div>
+                    <span className="text-xl font-semibold">Calculating your amazing results...</span>
+                  </div>
                 </div>
               )}
             </div>

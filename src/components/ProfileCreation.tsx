@@ -9,8 +9,18 @@ interface ProfileCreationProps {
 }
 
 const INTEREST_OPTIONS = [
-  'Animals', 'Space', 'Science', 'Sports', 'Art', 'Music', 
-  'Nature', 'Cars', 'Dinosaurs', 'Cooking', 'Books', 'Games'
+  { name: 'Animals', emoji: '🐾' },
+  { name: 'Space', emoji: '🚀' },
+  { name: 'Science', emoji: '🔬' },
+  { name: 'Sports', emoji: '⚽' },
+  { name: 'Art', emoji: '🎨' },
+  { name: 'Music', emoji: '🎵' },
+  { name: 'Nature', emoji: '🌿' },
+  { name: 'Cars', emoji: '🚗' },
+  { name: 'Dinosaurs', emoji: '🦕' },
+  { name: 'Cooking', emoji: '👨‍🍳' },
+  { name: 'Books', emoji: '📚' },
+  { name: 'Games', emoji: '🎮' }
 ];
 
 const ProfileCreation: React.FC<ProfileCreationProps> = ({ onProfileCreated, voiceManager }) => {
@@ -19,11 +29,11 @@ const ProfileCreation: React.FC<ProfileCreationProps> = ({ onProfileCreated, voi
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleInterestToggle = (interest: string) => {
-    setSelectedInterests(prev => 
-      prev.includes(interest) 
-        ? prev.filter(i => i !== interest)
-        : [...prev, interest]
+  const handleInterestToggle = (interestName: string) => {
+    setSelectedInterests(prev =>
+      prev.includes(interestName)
+        ? prev.filter(i => i !== interestName)
+        : [...prev, interestName]
     );
   };
 
@@ -63,46 +73,46 @@ const ProfileCreation: React.FC<ProfileCreationProps> = ({ onProfileCreated, voi
 
   return (
     <div className="max-w-2xl mx-auto">
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8">
+      <div className="kid-card-rainbow p-10 bounce-in">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
-            <User className="w-8 h-8 text-white" />
+          <div className="w-20 h-20 bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-6 wiggle shadow-xl">
+            <User className="w-10 h-10 text-white" />
           </div>
-          <h2 className="text-3xl font-bold text-gray-800 mb-2">Let's Get Started!</h2>
-          <p className="text-gray-600">Tell me a little about yourself so I can create the perfect quiz for you.</p>
+          <h2 className="text-4xl font-bold text-gray-800 mb-4">🌟 Let's Be Friends! 🌟</h2>
+          <p className="text-xl text-gray-700">Tell me about yourself so I can make the most amazing quiz just for you! ✨</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Name Input */}
           <div>
-            <label htmlFor="name" className="block text-lg font-medium text-gray-700 mb-2">
-              What's your name?
+            <label htmlFor="name" className="block text-xl font-bold text-gray-800 mb-3">
+              👋 What's your name, friend?
             </label>
             <input
               type="text"
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-400 focus:ring-4 focus:ring-purple-100 transition-all text-lg"
-              placeholder="Enter your name here"
+              className="w-full px-6 py-4 border-4 border-pink-200 rounded-2xl focus:border-purple-400 focus:ring-4 focus:ring-purple-100 transition-all text-xl font-medium bg-white/80 shadow-lg"
+              placeholder="Type your awesome name here! ✨"
               required
             />
           </div>
 
           {/* Age Input */}
           <div>
-            <label htmlFor="age" className="block text-lg font-medium text-gray-700 mb-2">
-              How old are you?
+            <label htmlFor="age" className="block text-xl font-bold text-gray-800 mb-3">
+              🎂 How old are you?
             </label>
             <select
               id="age"
               value={age}
               onChange={(e) => setAge(Number(e.target.value))}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-400 focus:ring-4 focus:ring-purple-100 transition-all text-lg"
+              className="w-full px-6 py-4 border-4 border-pink-200 rounded-2xl focus:border-purple-400 focus:ring-4 focus:ring-purple-100 transition-all text-xl font-medium bg-white/80 shadow-lg"
             >
               {Array.from({ length: 10 }, (_, i) => i + 5).map(ageOption => (
                 <option key={ageOption} value={ageOption}>
-                  {ageOption} years old
+                  {ageOption} years old 🎈
                 </option>
               ))}
             </select>
@@ -110,44 +120,45 @@ const ProfileCreation: React.FC<ProfileCreationProps> = ({ onProfileCreated, voi
 
           {/* Interests Selection */}
           <div>
-            <label className="block text-lg font-medium text-gray-700 mb-4">
-              <Heart className="w-5 h-5 inline mr-2 text-pink-500" />
-              What are you interested in? (Choose as many as you like!)
+            <label className="block text-xl font-bold text-gray-800 mb-4">
+              <Heart className="w-6 h-6 inline mr-2 text-pink-500" />
+              💖 What do you love? (Pick all your favorites!)
             </label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {INTEREST_OPTIONS.map(interest => (
                 <button
-                  key={interest}
+                  key={interest.name}
                   type="button"
-                  onClick={() => handleInterestToggle(interest)}
-                  className={`p-3 rounded-xl border-2 transition-all duration-200 transform hover:scale-105 ${
-                    selectedInterests.includes(interest)
-                      ? 'border-purple-400 bg-purple-50 text-purple-700'
-                      : 'border-gray-200 bg-white text-gray-700 hover:border-purple-200'
+                  onClick={() => handleInterestToggle(interest.name)}
+                  className={`p-4 rounded-2xl border-4 transition-all duration-200 transform hover:scale-105 text-lg font-semibold shadow-lg ${
+                    selectedInterests.includes(interest.name)
+                      ? 'border-purple-400 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 wiggle'
+                      : 'border-pink-200 bg-white text-gray-700 hover:border-purple-300 hover:bg-purple-50'
                   }`}
                 >
-                  {interest}
+                  <div className="text-2xl mb-1">{interest.emoji}</div>
+                  {interest.name}
                 </button>
               ))}
             </div>
           </div>
 
           {/* Submit Button */}
-          <div className="pt-4">
+          <div className="pt-6">
             <button
               type="submit"
               disabled={!name.trim() || isSubmitting}
-              className="w-full py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-lg font-medium rounded-xl hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100"
+              className="kid-button-primary w-full text-2xl py-6 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               {isSubmitting ? (
                 <div className="flex items-center justify-center">
-                  <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-2"></div>
-                  Creating Profile...
+                  <div className="animate-spin w-6 h-6 border-3 border-white border-t-transparent rounded-full mr-3"></div>
+                  ✨ Creating your magical profile... ✨
                 </div>
               ) : (
                 <>
-                  <Sparkles className="w-5 h-5 inline mr-2" />
-                  Create My Profile
+                  <Sparkles className="w-6 h-6 inline mr-3" />
+                  🚀 Let's Start the Adventure! 🚀
                 </>
               )}
             </button>
