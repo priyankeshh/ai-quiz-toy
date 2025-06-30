@@ -1,8 +1,8 @@
 import { logger } from '../utils/logger';
 
 class VoiceManager {
-  private synthesis: SpeechSynthesis;
-  private voices: SpeechSynthesisVoice[];
+  private synthesis!: SpeechSynthesis;
+  private voices!: SpeechSynthesisVoice[];
   private selectedVoice: SpeechSynthesisVoice | null = null;
   private encouragingPhrases: string[] = [
     "You're doing amazing!",
@@ -57,6 +57,12 @@ class VoiceManager {
     }
   }
 
+  private removeEmojis(text: string): string {
+    // Remove emojis and other Unicode symbols that might cause pronunciation issues
+    // This covers most emoji ranges and common symbols
+    return text.replace(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F900}-\u{1F9FF}]|[\u{1F018}-\u{1F270}]|[\u{1F000}-\u{1F02F}]|[\u{1F0A0}-\u{1F0FF}]|[\u{E000}-\u{F8FF}]|[\u{FE00}-\u{FE0F}]|[\u{1F200}-\u{1F2FF}]|[\u{1F780}-\u{1F7FF}]|[\u{1F800}-\u{1F8FF}]|[\u{2B50}]|[\u{2B55}]|[\u{2728}]|[\u{2764}]|[\u{1F60D}]|[\u{1F970}]|[\u{1F389}]|[\u{1F38A}]|[\u{1F3C6}]|[\u{1F3C5}]|[\u{1F947}-\u{1F949}]|[\u{1F4AF}]|[\u{1F525}]|[\u{1F44D}]|[\u{1F44F}]|[\u{1F643}]|[\u{1F929}]/gu, '');
+  }
+
   speak(text: string, options: { rate?: number; pitch?: number; emotion?: 'excited' | 'encouraging' | 'gentle' | 'celebration' } = {}) {
     logger.voiceEvent('Speak requested', { text: text.substring(0, 50) + '...', emotion: options.emotion });
 
@@ -68,13 +74,14 @@ class VoiceManager {
     // Cancel any ongoing speech
     this.synthesis.cancel();
 
-    let finalText = text;
+    // Remove emojis from text before processing
+    let finalText = this.removeEmojis(text);
 
     // Add emotional context based on the emotion parameter
     if (options.emotion === 'celebration') {
-      finalText = `🎉 ${text} ${this.getRandomEncouragement()}`;
+      finalText = `${finalText} ${this.getRandomEncouragement()}`;
     } else if (options.emotion === 'encouraging') {
-      finalText = `${text} ${this.getRandomEncouragement()}`;
+      finalText = `${finalText} ${this.getRandomEncouragement()}`;
     }
 
     const utterance = new SpeechSynthesisUtterance(finalText);

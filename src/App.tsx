@@ -117,7 +117,14 @@ function App() {
           setQuizSession(sessionData.session);
           setCurrentState('quiz');
           setMascotState(MascotStates.QUIZ_START);
-          voiceManager.speak(`Your quiz is ready! Let's begin with the first question.`);
+          
+          // Add a small delay to ensure UI state is consistent before clearing loading
+          setTimeout(() => {
+            setIsLoading(false);
+            voiceManager.speak(`Your quiz is ready! Let's begin with the first question.`);
+          }, 100);
+        } else {
+          throw new Error(sessionData.error || 'Failed to load quiz session');
         }
       } else {
         throw new Error(data.error || 'Failed to generate quiz');
