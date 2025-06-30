@@ -199,6 +199,36 @@
   .error-shake {
     animation: errorShake 0.5s ease-in-out;
   }
+
+  /* Mobile-specific optimizations */
+  @media (max-width: 768px) {
+    .kid-button {
+      @apply px-8 py-5 text-xl;
+    }
+
+    .kid-button-primary, .kid-button-secondary, .kid-button-success {
+      @apply text-xl py-5 px-8;
+    }
+
+    .interactive-hover:hover {
+      transform: translateY(-4px) scale(1.02);
+    }
+
+    .glow-pulse {
+      animation: glowPulseMobile 2s ease-in-out infinite;
+    }
+  }
+
+  /* Touch-friendly interactions */
+  @media (hover: none) and (pointer: coarse) {
+    .interactive-hover:active {
+      transform: translateY(-2px) scale(1.02);
+    }
+
+    .kid-button:active {
+      transform: scale(0.98);
+    }
+  }
 }
 
 @keyframes bounceIn {
@@ -465,4 +495,13 @@
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-5px); }
   75% { transform: translateX(5px); }
+}
+
+@keyframes glowPulseMobile {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(255, 105, 180, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(255, 105, 180, 0.6);
+  }
 }
