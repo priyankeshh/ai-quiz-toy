@@ -105,7 +105,7 @@ def generate_quiz():
                     "questions": [
                         {{
                             "question": "Exciting question that makes kids curious?",
-                            "options": ["Fun option A", "Amazing option B", "Cool option C", "Awesome option D"],
+                            "options": ["Fun first option", "Amazing second option", "Cool third option", "Awesome fourth option"],
                             "correct_answer": 0,
                             "explanation": "Wow! That's right! Here's why this is so amazing and what makes it special for kids to understand..."
                         }}
