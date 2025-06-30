@@ -1,0 +1,12 @@
+# Railway deployment configuration
+services:
+  web:
+    build:
+      commands:
+        - npm install
+        - npm run build
+        - pip install -r requirements.txt
+    start: python app.py
+    environment:
+      - NODE_ENV=production
+      - FLASK_ENV=production
