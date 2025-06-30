@@ -1,3 +1,5 @@
+import { logger } from '../utils/logger';
+
 class VoiceManager {
   private synthesis: SpeechSynthesis;
   private voices: SpeechSynthesisVoice[];
@@ -14,30 +16,55 @@ class VoiceManager {
   ];
 
   constructor() {
+    logger.voiceEvent('VoiceManager initializing');
+
+    if (!('speechSynthesis' in window)) {
+      logger.voiceError('Speech synthesis not supported');
+      return;
+    }
+
     this.synthesis = window.speechSynthesis;
     this.voices = [];
     this.loadVoices();
 
     // Listen for voices changed event
     this.synthesis.onvoiceschanged = () => {
+      logger.voiceEvent('Voices changed event fired');
       this.loadVoices();
     };
   }
 
   private loadVoices() {
     this.voices = this.synthesis.getVoices();
-    
+    logger.voiceEvent('Voices loaded', { count: this.voices.length });
+
     // Try to find a child-friendly or female voice
-    this.selectedVoice = this.voices.find(voice => 
+    this.selectedVoice = this.voices.find(voice =>
       voice.name.toLowerCase().includes('female') ||
       voice.name.toLowerCase().includes('samantha') ||
       voice.name.toLowerCase().includes('karen') ||
       voice.name.toLowerCase().includes('veena') ||
       voice.name.toLowerCase().includes('zira')
     ) || this.voices[0] || null;
+
+    if (this.selectedVoice) {
+      logger.voiceEvent('Voice selected', {
+        name: this.selectedVoice.name,
+        lang: this.selectedVoice.lang
+      });
+    } else {
+      logger.voiceError('No voice available');
+    }
   }
 
   speak(text: string, options: { rate?: number; pitch?: number; emotion?: 'excited' | 'encouraging' | 'gentle' | 'celebration' } = {}) {
+    logger.voiceEvent('Speak requested', { text: text.substring(0, 50) + '...', emotion: options.emotion });
+
+    if (!this.synthesis) {
+      logger.voiceError('Speech synthesis not available');
+      return;
+    }
+
     // Cancel any ongoing speech
     this.synthesis.cancel();
 
@@ -81,7 +108,21 @@ class VoiceManager {
 
     utterance.volume = 1;
 
-    this.synthesis.speak(utterance);
+    // Add error handling for speech synthesis
+    utterance.onerror = (event) => {
+      logger.voiceError('Speech synthesis error', { error: event.error });
+    };
+
+    utterance.onend = () => {
+      logger.voiceEvent('Speech completed');
+    };
+
+    try {
+      this.synthesis.speak(utterance);
+      logger.voiceEvent('Speech started');
+    } catch (error) {
+      logger.voiceError('Failed to start speech', error);
+    }
   }
 
   speakCorrectAnswer(explanation: string) {

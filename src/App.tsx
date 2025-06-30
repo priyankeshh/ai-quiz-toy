@@ -6,6 +6,8 @@ import QuizInterface from './components/QuizInterface';
 import VoiceManager from './components/VoiceManager';
 import AchievementSystem, { Achievement } from './components/AchievementSystem';
 import Mascot, { MascotStates } from './components/Mascot';
+import { logger, BrowserCompatibility } from './utils/logger';
+import TestSuite from './components/TestSuite';
 
 export interface Profile {
   id: string;
@@ -49,17 +51,25 @@ function App() {
   const [currentStreak, setCurrentStreak] = useState(0);
   const [completedTopics, setCompletedTopics] = useState<string[]>([]);
   const [showAchievements, setShowAchievements] = useState(false);
+  const [showTestSuite, setShowTestSuite] = useState(false);
   const [mascotState, setMascotState] = useState<{mood: 'happy' | 'excited' | 'thinking' | 'celebrating' | 'encouraging', message: string}>(MascotStates.WELCOME);
 
   // Initialize voice manager (memoized for performance)
   const voiceManager = useMemo(() => new VoiceManager(), []);
 
   useEffect(() => {
+    // Initialize app and run compatibility checks
+    logger.info('APP', 'Application starting');
+    const compatibility = BrowserCompatibility.runAllChecks();
+    logger.info('APP', 'Browser compatibility check completed', compatibility);
+
     // Welcome message when app loads
     voiceManager.speak("Welcome to the AI Quiz Toy! Let's start by creating your profile.");
-  }, []);
+    logger.userAction('App loaded', { compatibility });
+  }, [voiceManager]);
 
   const handleProfileCreated = useCallback((newProfile: Profile) => {
+    logger.userAction('Profile created', { name: newProfile.name, age: newProfile.age, interests: newProfile.interests });
     setProfile(newProfile);
     setCurrentState('topic');
     setMascotState(MascotStates.TOPIC_SELECTION);
@@ -68,12 +78,16 @@ function App() {
 
   const handleTopicSelected = async (topic: string) => {
     if (!profile) return;
-    
+
+    logger.userAction('Topic selected', { topic, profileId: profile.id });
     setCurrentTopic(topic);
     setIsLoading(true);
     voiceManager.speak(`Excellent choice! I'm creating a fun quiz about ${topic} just for you. This will only take a moment.`);
 
+    const startTime = performance.now();
     try {
+      logger.apiRequest('/api/quiz/generate', 'POST', { topic, profile_id: profile.id });
+
       const response = await fetch('http://localhost:5000/api/quiz/generate', {
         method: 'POST',
         headers: {
@@ -85,14 +99,21 @@ function App() {
         }),
       });
 
+      logger.apiResponse('/api/quiz/generate', response.status);
       const data = await response.json();
       
       if (data.success) {
+        logger.info('QUIZ', 'Quiz generation successful', { sessionId: data.session_id });
+
         // Fetch the session data
         const sessionResponse = await fetch(`http://localhost:5000/api/quiz/session/${data.session_id}`);
         const sessionData = await sessionResponse.json();
-        
+
         if (sessionData.success) {
+          const endTime = performance.now();
+          logger.performance('Quiz generation time', endTime - startTime);
+          logger.info('QUIZ', 'Quiz session loaded', { questionCount: sessionData.session.questions.length });
+
           setQuizSession(sessionData.session);
           setCurrentState('quiz');
           setMascotState(MascotStates.QUIZ_START);
@@ -102,13 +123,15 @@ function App() {
         throw new Error(data.error || 'Failed to generate quiz');
       }
     } catch (error) {
-      console.error('Error generating quiz:', error);
+      logger.apiError('/api/quiz/generate', error);
       setIsLoading(false);
 
       // More specific error handling
       if (error instanceof TypeError && error.message.includes('fetch')) {
+        logger.error('NETWORK', 'Connection failed', { topic, profileId: profile.id });
         voiceManager.speak("Oops! It looks like we're having trouble connecting. Please check your internet connection and try again.");
       } else {
+        logger.error('QUIZ', 'Quiz generation failed', { topic, error: error instanceof Error ? error.message : String(error) });
         voiceManager.speak("I'm sorry, there was a problem creating your quiz. Let's try a different topic or try again in a moment.");
       }
 
@@ -212,6 +235,16 @@ function App() {
                   <span className="text-sm md:text-lg font-bold hidden sm:inline">🏅 Achievements</span>
                   <span className="text-sm font-bold sm:hidden">🏅</span>
                 </button>
+
+                {/* Test Suite Button (Development Only) */}
+                {import.meta.env.DEV && (
+                  <button
+                    onClick={() => setShowTestSuite(!showTestSuite)}
+                    className="flex items-center space-x-1 bg-gradient-to-r from-gray-400 to-gray-600 rounded-full px-4 py-2 shadow-lg border-2 border-gray-300 text-white hover:shadow-xl transition-all transform hover:scale-105 touch-manipulation"
+                  >
+                    <span className="text-sm font-bold">🧪</span>
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -238,6 +271,24 @@ function App() {
               topicsCompleted={completedTopics}
               onAchievementUnlocked={handleAchievementUnlocked}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Test Suite Overlay (Development Only) */}
+      {showTestSuite && import.meta.env.DEV && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b p-4 flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-800">🧪 Development Test Suite</h2>
+              <button
+                onClick={() => setShowTestSuite(false)}
+                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+              >
+                ✕ Close
+              </button>
+            </div>
+            <TestSuite />
           </div>
         </div>
       )}
