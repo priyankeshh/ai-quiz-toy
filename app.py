@@ -105,7 +105,7 @@ def generate_quiz():
                     "questions": [
                         {{
                             "question": "Exciting question that makes kids curious?",
-                            "options": ["Fun option A", "Amazing option B", "Cool option C", "Awesome option D"],
+                            "options": ["Fun first option", "Amazing second option", "Cool third option", "Awesome fourth option"],
                             "correct_answer": 0,
                             "explanation": "Wow! That's right! Here's why this is so amazing and what makes it special for kids to understand..."
                         }}
@@ -278,4 +278,6 @@ def get_quiz_session(session_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('FLASK_ENV') != 'production'
+    app.run(debug=debug, host='0.0.0.0', port=port)
