@@ -1,7 +1,8 @@
-import React, { useState, useRef } from 'react';
-import { Mic, MicOff, Volume2, CheckCircle, XCircle, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Mic, MicOff, Volume2, CheckCircle, XCircle, ArrowRight, Star, Zap, Heart } from 'lucide-react';
 import { QuizSession } from '../App';
 import VoiceManager from './VoiceManager';
+import SpeechInput from './SpeechInput';
 
 interface QuizInterfaceProps {
   session: QuizSession;
@@ -18,75 +19,50 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ session: initialSession, 
     isCorrect: boolean;
     explanation: string;
   } | null>(null);
-  const [isListening, setIsListening] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const [isListening, setIsListening] = useState(false);
 
   const currentQuestion = session.questions[session.current_question];
 
-  const startListening = () => {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      voiceManager.speak("Voice recognition is not supported. Please click your answer instead.");
-      return;
+  const handleSpeechResult = (transcript: string) => {
+    const spokenAnswer = transcript.toLowerCase();
+
+    // Try to match spoken answer to options
+    let answerIndex = -1;
+
+    // Check for letter answers (A, B, C, D)
+    if (spokenAnswer.includes('a') || spokenAnswer.includes('option a')) answerIndex = 0;
+    else if (spokenAnswer.includes('b') || spokenAnswer.includes('option b')) answerIndex = 1;
+    else if (spokenAnswer.includes('c') || spokenAnswer.includes('option c')) answerIndex = 2;
+    else if (spokenAnswer.includes('d') || spokenAnswer.includes('option d')) answerIndex = 3;
+    else {
+      // Try to match full answer text
+      currentQuestion.options.forEach((option, index) => {
+        if (spokenAnswer.includes(option.toLowerCase())) {
+          answerIndex = index;
+        }
+      });
     }
 
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = 'en-US';
-
-    recognition.onstart = () => {
-      setIsListening(true);
-      voiceManager.speak("I'm listening for your answer. You can say A, B, C, or D, or speak the full answer.");
-    };
-
-    recognition.onresult = (event) => {
-      const spokenAnswer = event.results[0][0].transcript.toLowerCase();
-      
-      // Try to match spoken answer to options
-      let answerIndex = -1;
-      
-      // Check for letter answers (A, B, C, D)
-      if (spokenAnswer.includes('a') || spokenAnswer.includes('option a')) answerIndex = 0;
-      else if (spokenAnswer.includes('b') || spokenAnswer.includes('option b')) answerIndex = 1;
-      else if (spokenAnswer.includes('c') || spokenAnswer.includes('option c')) answerIndex = 2;
-      else if (spokenAnswer.includes('d') || spokenAnswer.includes('option d')) answerIndex = 3;
-      else {
-        // Try to match full answer text
-        currentQuestion.options.forEach((option, index) => {
-          if (spokenAnswer.includes(option.toLowerCase())) {
-            answerIndex = index;
-          }
-        });
-      }
-
-      if (answerIndex !== -1) {
-        setSelectedAnswer(answerIndex);
-        voiceManager.speak(`You chose ${String.fromCharCode(65 + answerIndex)}: ${currentQuestion.options[answerIndex]}`);
-      } else {
-        voiceManager.speak("I didn't understand that answer. Please try again or click your choice.");
-      }
-    };
-
-    recognition.onerror = () => {
-      voiceManager.speak("I didn't catch that. Please try speaking again or click your answer.");
-      setIsListening(false);
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-    };
-
-    recognitionRef.current = recognition;
-    recognition.start();
+    if (answerIndex !== -1) {
+      setSelectedAnswer(answerIndex);
+      voiceManager.speak(`You chose ${String.fromCharCode(65 + answerIndex)}: ${currentQuestion.options[answerIndex]}`);
+    } else {
+      voiceManager.speak("I didn't understand that answer. Please try again or click your choice.");
+    }
   };
 
-  const stopListening = () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-    }
+  const handleSpeechError = (error: string) => {
+    console.error('Speech error:', error);
+    voiceManager.speak("I didn't catch that. Please try speaking again or click your answer.");
+  };
+
+  const handleSpeechStart = () => {
+    setIsListening(true);
+    voiceManager.speak("I'm listening for your answer. You can say A, B, C, or D, or speak the full answer.");
+  };
+
+  const handleSpeechEnd = () => {
     setIsListening(false);
   };
 
@@ -252,8 +228,11 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ session: initialSession, 
 
             {/* Controls */}
             <div className="flex items-center justify-between">
-              <button
-                onClick={isListening ? stopListening : startListening}
+              <SpeechInput
+                onResult={handleSpeechResult}
+                onError={handleSpeechError}
+                onStart={handleSpeechStart}
+                onEnd={handleSpeechEnd}
                 className={`flex items-center space-x-3 px-8 py-4 rounded-2xl border-4 transition-all transform hover:scale-105 shadow-lg text-lg font-semibold ${
                   isListening
                     ? 'border-red-400 bg-red-100 text-red-600 animate-pulse'
@@ -262,7 +241,7 @@ const QuizInterface: React.FC<QuizInterfaceProps> = ({ session: initialSession, 
               >
                 {isListening ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
                 <span>{isListening ? '🛑 Stop Listening' : '🎤 Speak Your Answer'}</span>
-              </button>
+              </SpeechInput>
 
               <button
                 onClick={submitAnswer}

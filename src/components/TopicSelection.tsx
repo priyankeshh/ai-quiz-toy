@@ -1,7 +1,8 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { Mic, MicOff, Send, Lightbulb, BookOpen } from 'lucide-react';
 import { Profile } from '../App';
 import VoiceManager from './VoiceManager';
+import SpeechInput from './SpeechInput';
 
 interface TopicSelectionProps {
   profile: Profile;
@@ -27,49 +28,23 @@ const SUGGESTED_TOPICS = [
 const TopicSelection: React.FC<TopicSelectionProps> = ({ profile, onTopicSelected, voiceManager }) => {
   const [topic, setTopic] = useState('');
   const [isListening, setIsListening] = useState(false);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
 
-  const startListening = () => {
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      voiceManager.speak("I'm sorry, voice recognition is not supported in your browser. Please type your topic instead.");
-      return;
-    }
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = 'en-US';
-
-    recognition.onstart = () => {
-      setIsListening(true);
-      voiceManager.speak("I'm listening! Tell me what topic you'd like to learn about.");
-    };
-
-    recognition.onresult = (event) => {
-      const spokenTopic = event.results[0][0].transcript;
-      setTopic(spokenTopic);
-      voiceManager.speak(`I heard "${spokenTopic}". That sounds like a great topic!`);
-    };
-
-    recognition.onerror = () => {
-      voiceManager.speak("I didn't catch that. Please try speaking again or type your topic.");
-      setIsListening(false);
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-    };
-
-    recognitionRef.current = recognition;
-    recognition.start();
+  const handleSpeechResult = (transcript: string) => {
+    setTopic(transcript);
+    voiceManager.speak(`I heard "${transcript}". That sounds like a great topic!`);
   };
 
-  const stopListening = () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-    }
+  const handleSpeechError = (error: string) => {
+    console.error('Speech error:', error);
+    voiceManager.speak("I didn't catch that. Please try speaking again or type your topic.");
+  };
+
+  const handleSpeechStart = () => {
+    setIsListening(true);
+    voiceManager.speak("I'm listening! Tell me what topic you'd like to learn about.");
+  };
+
+  const handleSpeechEnd = () => {
     setIsListening(false);
   };
 
@@ -128,8 +103,11 @@ const TopicSelection: React.FC<TopicSelectionProps> = ({ profile, onTopicSelecte
               </button>
             </div>
 
-            <button
-              onClick={isListening ? stopListening : startListening}
+            <SpeechInput
+              onResult={handleSpeechResult}
+              onError={handleSpeechError}
+              onStart={handleSpeechStart}
+              onEnd={handleSpeechEnd}
               className={`p-5 rounded-2xl border-4 transition-all transform hover:scale-105 shadow-lg ${
                 isListening
                   ? 'border-red-400 bg-red-100 text-red-600 animate-pulse'
@@ -137,7 +115,7 @@ const TopicSelection: React.FC<TopicSelectionProps> = ({ profile, onTopicSelecte
               }`}
             >
               {isListening ? <MicOff className="w-7 h-7" /> : <Mic className="w-7 h-7" />}
-            </button>
+            </SpeechInput>
           </div>
 
           {isListening && (

@@ -8,6 +8,8 @@ import AchievementSystem, { Achievement } from './components/AchievementSystem';
 import Mascot, { MascotStates } from './components/Mascot';
 import { logger, BrowserCompatibility } from './utils/logger';
 import TestSuite from './components/TestSuite';
+import VoiceTest from './components/VoiceTest';
+import WebSpeechTest from './components/WebSpeechTest';
 
 export interface Profile {
   id: string;
@@ -52,6 +54,8 @@ function App() {
   const [completedTopics, setCompletedTopics] = useState<string[]>([]);
   const [showAchievements, setShowAchievements] = useState(false);
   const [showTestSuite, setShowTestSuite] = useState(false);
+  const [showVoiceTest, setShowVoiceTest] = useState(false);
+  const [showWebSpeechTest, setShowWebSpeechTest] = useState(false);
   const [mascotState, setMascotState] = useState<{mood: 'happy' | 'excited' | 'thinking' | 'celebrating' | 'encouraging', message: string}>(MascotStates.WELCOME);
 
   // Initialize voice manager (memoized for performance)
@@ -245,12 +249,26 @@ function App() {
 
                 {/* Test Suite Button (Development Only) */}
                 {import.meta.env.DEV && (
-                  <button
-                    onClick={() => setShowTestSuite(!showTestSuite)}
-                    className="flex items-center space-x-1 bg-gradient-to-r from-gray-400 to-gray-600 rounded-full px-4 py-2 shadow-lg border-2 border-gray-300 text-white hover:shadow-xl transition-all transform hover:scale-105 touch-manipulation"
-                  >
-                    <span className="text-sm font-bold">🧪</span>
-                  </button>
+                  <>
+                    <button
+                      onClick={() => setShowTestSuite(!showTestSuite)}
+                      className="flex items-center space-x-1 bg-gradient-to-r from-gray-400 to-gray-600 rounded-full px-4 py-2 shadow-lg border-2 border-gray-300 text-white hover:shadow-xl transition-all transform hover:scale-105 touch-manipulation"
+                    >
+                      <span className="text-sm font-bold">🧪</span>
+                    </button>
+                    <button
+                      onClick={() => setShowVoiceTest(!showVoiceTest)}
+                      className="flex items-center space-x-1 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full px-4 py-2 shadow-lg border-2 border-blue-300 text-white hover:shadow-xl transition-all transform hover:scale-105 touch-manipulation"
+                    >
+                      <span className="text-sm font-bold">🎤</span>
+                    </button>
+                    <button
+                      onClick={() => setShowWebSpeechTest(!showWebSpeechTest)}
+                      className="flex items-center space-x-1 bg-gradient-to-r from-green-400 to-green-600 rounded-full px-4 py-2 shadow-lg border-2 border-green-300 text-white hover:shadow-xl transition-all transform hover:scale-105 touch-manipulation"
+                    >
+                      <span className="text-sm font-bold">🗣️</span>
+                    </button>
+                  </>
                 )}
               </div>
             )}
@@ -296,6 +314,46 @@ function App() {
               </button>
             </div>
             <TestSuite />
+          </div>
+        </div>
+      )}
+
+      {/* Voice Test Overlay (Development Only) */}
+      {showVoiceTest && import.meta.env.DEV && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full">
+            <div className="sticky top-0 bg-white border-b p-4 flex justify-between items-center rounded-t-2xl">
+              <h2 className="text-2xl font-bold text-gray-800">🎤 Voice Recognition Test</h2>
+              <button
+                onClick={() => setShowVoiceTest(false)}
+                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+              >
+                ✕ Close
+              </button>
+            </div>
+            <div className="p-6">
+              <VoiceTest />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Web Speech Test Overlay (Development Only) */}
+      {showWebSpeechTest && import.meta.env.DEV && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full">
+            <div className="sticky top-0 bg-white border-b p-4 flex justify-between items-center rounded-t-2xl">
+              <h2 className="text-2xl font-bold text-gray-800">🗣️ Web Speech API Test</h2>
+              <button
+                onClick={() => setShowWebSpeechTest(false)}
+                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+              >
+                ✕ Close
+              </button>
+            </div>
+            <div className="p-6">
+              <WebSpeechTest />
+            </div>
           </div>
         </div>
       )}
