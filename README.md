@@ -129,7 +129,7 @@ npm run dev
 ### Adding New Topics
 The app automatically generates quizzes for any topic using AI. Popular topics include:
 - Science (Animals, Space, Human Body)
-- History (Ancient Egypt, Dinosaurs)
+- History (Ancient India, Dinosaurs)
 - Arts (Music, Colors, Drawing)
 - Math (Numbers, Shapes, Patterns)
 
