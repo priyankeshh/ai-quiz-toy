@@ -17,7 +17,7 @@ const SUGGESTED_TOPICS = [
   { name: 'How Plants Grow', emoji: '🌱', description: 'Watch nature come alive!', difficulty: 'Easy', color: 'from-green-400 to-lime-500' },
   { name: 'The Human Body', emoji: '🫀', description: 'Discover your amazing body!', difficulty: 'Medium', color: 'from-red-400 to-pink-500' },
   { name: 'Weather and Seasons', emoji: '🌦️', description: 'Explore nature\'s patterns!', difficulty: 'Easy', color: 'from-yellow-400 to-orange-500' },
-  { name: 'Ancient Egypt', emoji: '🏺', description: 'Uncover ancient mysteries!', difficulty: 'Hard', color: 'from-yellow-600 to-orange-600' },
+  { name: 'Ancient India', emoji: '🏺', description: 'Uncover ancient mysteries!', difficulty: 'Hard', color: 'from-yellow-600 to-orange-600' },
   { name: 'Inventions', emoji: '💡', description: 'Meet brilliant inventors!', difficulty: 'Medium', color: 'from-yellow-400 to-amber-500' },
   { name: 'Musical Instruments', emoji: '🎸', description: 'Make beautiful music!', difficulty: 'Easy', color: 'from-purple-400 to-pink-500' },
   { name: 'Different Countries', emoji: '🌍', description: 'Travel around the world!', difficulty: 'Medium', color: 'from-green-400 to-teal-500' },
